@@ -1,0 +1,10 @@
+#block-spinner{
+  background-image: url("../block-spinner.gif");
+  background-size: 100px 100px; 
+  display: none;
+  position: absolute;
+  top: 29%;
+  left: 75%;
+  height: 100px;
+  width: 100px;
+}
