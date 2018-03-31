@@ -84,7 +84,7 @@ contract NonFungibleToken is DetailedERC721, Ownable{
     string public name;
     string public symbol;
 
-    uint public numTokensTotal;
+    uint numTokensTotal;
 
     mapping(uint => address) internal tokenIdToOwner;
     mapping(uint => address) internal tokenIdToApprovedAddress;
@@ -365,21 +365,26 @@ contract MintableNonFungibleToken is NonFungibleToken{
     MintableNonFungibleToken _token_address = this;
     uint public token_counter = 0;
     uint public prop_token_counter = 0;
-    uint[] private total_prop_tokens;
-    uint[] private spent_prop_tokens;
+    uint[] public total_prop_tokens;
+    uint[] public spent_prop_tokens;
 
     uint public _crowdsale_counter = 0;
     CrowdSale[] public CrowdSales;
     
     mapping(address => uint[]) property_to_tokens;
     // mapping(uint => address) token_to_address;
-    mapping(address=>CrowdSale) addres_to_Property;
+    mapping(address=>CrowdSale) public addres_to_Property;
     mapping(address=>uint)owner_to_crowdsale_to_token;
     mapping(uint=>address)crowdsale_token_to_address;
     // mapping(uint=>address)prop_tokens_crowdsale;
 
     
     struct CrowdSale{
+        uint _cap;
+        uint _token_goal;
+        uint _goal;
+        uint _price_per_token;
+        uint _time_limit;
         uint _id;
         address _address;
         bool _visible;
@@ -410,8 +415,8 @@ contract MintableNonFungibleToken is NonFungibleToken{
     function get_tokens_for_property(address _property) public returns (uint[]){
         return property_to_tokens[_property];
     }
-
-    function spend_CS_Token(uint _token_id) public {
+                                    //10,     "1000000000000000",     "3000000000000000",  "3000000000000000",  3,    0
+    function spend_CS_Token(uint _time_limit, uint _price_per_token, uint _cap, uint _goal, uint _token_goal, uint _token_id) public {
 
         require(ownerOf(_token_id) == msg.sender);
         // require(this == get_where_tokens_belong(_token_id) ); 
@@ -420,20 +425,25 @@ contract MintableNonFungibleToken is NonFungibleToken{
         approve(address(this), _token_id);
         this.transferFrom(msg.sender, address(this), _token_id);
 
-        spent_prop_tokens.push(_token_id);
-        address _new_crowdasle = make_new_property(msg.sender);
+        spent_prop_tokens.push(_token_id);        //wallett, token_id, time_in_minutes, rate
+        address _new_crowdasle = make_new_property(_time_limit, _price_per_token, msg.sender, _cap, _goal, _token_goal, _token_id);
         emit Crowdsale_initiated(_new_crowdasle, msg.sender, _token_id);
     } 
     //43200, 1, "0xca35b7d915458ef540ade6068dfe2f44e8fa733c", "1000", "0x35ef07393b57464e93deb59175ff72e6499450cf", "1000"
     //time(min), rate, "wallet raising funds",              cap,       Token,                                        goal
     // function make_new_property(address _wallet) internal returns(uint _id, address _crowdsale, bool _visible, address _wallet_raising_funds){
-    function make_new_property(address _wallet) internal returns(address _crowdsale){
-      address _new_crowdsale = new ERC721CrowdSale(43200, 1, _wallet, 1000, _token_address, 1000);
+    function make_new_property(uint _time_limit, uint _price_per_token, address _wallet, uint _cap, uint _goal, uint _token_goal, uint _token_id) internal returns(address _crowdsale){
+      address _new_crowdsale = new ERC721CrowdSale(_time_limit, _price_per_token, _wallet, _cap, _token_address, _goal, _token_goal);
       CrowdSale storage _new_crowdsale_obj = addres_to_Property[_new_crowdsale];
       _new_crowdsale_obj._id = _crowdsale_counter;
       _new_crowdsale_obj._address = _new_crowdsale;
       _new_crowdsale_obj._visible = true;
-      _new_crowdsale_obj._token_id = _crowdsale_counter;
+      _new_crowdsale_obj._cap = _cap;
+      _new_crowdsale_obj._token_goal = _token_goal;
+      _new_crowdsale_obj._goal = _goal;
+      _new_crowdsale_obj._price_per_token = _price_per_token;
+      _new_crowdsale_obj._time_limit = _time_limit;
+      _new_crowdsale_obj._token_id = _token_id;
       _new_crowdsale_obj._wallet_raising_funds = _wallet;
       CrowdSales.push(_new_crowdsale_obj);
       _crowdsale_counter++;
@@ -525,7 +535,7 @@ contract MintableNonFungibleToken is NonFungibleToken{
         }
         emit Seed_Tokes_Minted(_addr ,_metadata ,_amount);
     }    
-    function mint_prop_token(address _addr, address _metadata) public{
+    function mint_prop_token(address _addr, address _metadata) internal{
         mint(_addr, token_counter, _metadata);
         // token_to_address[token_counter] = _addr;
         // property_to_tokens[_addr].push(token_counter);
@@ -534,6 +544,15 @@ contract MintableNonFungibleToken is NonFungibleToken{
 
         prop_token_counter++;
         token_counter++;
+
+    }
+
+    function request_finalization(address _addr) public{
+        CrowdSale memory  crowdsale= (addres_to_Property[_addr]);
+        address addr = crowdsale._wallet_raising_funds;
+        require(addr == msg.sender);
+        ERC721CrowdSale erc721crowdsale = ERC721CrowdSale(_addr);
+        erc721crowdsale.finalize();
 
     }
 }

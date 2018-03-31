@@ -3,8 +3,8 @@ App = {
   web3Provider: null,
   contracts: {},
   address:{
-    // ERC721MintableToken:"0xee308f9f50e06383ddab6e17f1e06b647794b9ee"
-    ERC721MintableToken:"0x8d1f10da2f5a9c2ff4b7fc47e50ef36026f53925"//rinkeby address
+    ERC721MintableToken:"0x8D1f10dA2f5A9C2FF4B7fC47e50EF36026F53925"
+    // ERC721MintableToken:"0x8d1f10da2f5a9c2ff4b7fc47e50ef36026f53925"//rinkeby address
   },
   data:{},
   abi:{},
@@ -71,16 +71,20 @@ App = {
       'get_tokens_for_property()',
     ]
 
+    var sidebar_el = $('.topbar')[0];
     data_array.forEach((i, x)=>{
-      var sidebar_el = $('.sidebar')[0];
       console.log(i)
       App.contracts.ERC721MintableToken[i]((e, r)=>{
         if(e){
           console.log(i+':'+e)
         } else{
+          if(i==="owner" || i === "get_wei_balance"){
+            var owner_item = App.make_owner_item()
+            $(sidebar_el).append(owner_item)
+          }
           console.log(i+':'+r)
           App.data[i]=r
-          $(sidebar_el).append(`<div>${i}: ${r}</div>`)
+          // $(sidebar_el).append(`<div>${i}: ${r}</div>`)
 
         }
         console.log(x)
@@ -146,6 +150,7 @@ App = {
             console.log(r.toNumber());
             var _token_id = (r.toNumber());
             App.contracts.ERC721MintableToken.spend_CS_Token(_token_id, (e, r)=>{
+              playSound('small_crowd_cheering_and_clapping.wav.mp3');
               console.log(e)
               console.log(r)
             })

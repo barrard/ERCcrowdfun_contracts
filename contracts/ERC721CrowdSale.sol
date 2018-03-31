@@ -76,7 +76,7 @@ contract Crowdsale {
   address public wallet;
 
   // How many token units a buyer gets per eth
-  uint256 public rate;
+  uint256 public price_per_token;
 
   // Amount of eth raised
   uint256 public ethRaised;
@@ -91,15 +91,15 @@ contract Crowdsale {
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
   /**
-   * @param _rate Number of token units a buyer gets per eth
+   * @param _price_per_token Number of token units a buyer gets per eth
    * @param _token Address of the token being sold
    */
-  function Crowdsale(uint256 _rate, address _wallet, DetailedERC721 _token) public {
-    require(_rate > 0);
+  function Crowdsale(uint256 _price_per_token, address _wallet, DetailedERC721 _token) public {
+    require(_price_per_token > 0);
     require(_wallet != address(0));
     require(_token != address(0));
 
-    rate = _rate;
+    price_per_token = _price_per_token;
     wallet = _wallet;
     token = _token;
   }
@@ -120,19 +120,19 @@ contract Crowdsale {
    * @param _beneficiary Address performing the token purchase
    */
   function buyTokens(address _beneficiary) public payable {
-    require(msg.value > 1 ether /10);
+    // require(msg.value == 1 ether /10);
     uint256 weiAmount = msg.value;
-    uint256 tokenAmount = weiAmount / (1 ether / 10);
+    uint256 tokenAmount = weiAmount / price_per_token;
     _preValidatePurchase(_beneficiary, tokenAmount);
 
     // calculate token amount to be created
-    uint256 tokens = _getTokenAmount(tokenAmount);
+    // uint256 tokens = _getTokenAmount(tokenAmount);
 
     // update state
-    ethRaised = ethRaised.add(tokenAmount/10);
+    ethRaised = ethRaised.add(tokenAmount.mul(price_per_token));
 
-    _processPurchase(_beneficiary, tokens);
-    emit TokenPurchase(msg.sender, _beneficiary, tokenAmount, tokens);
+    _processPurchase(_beneficiary, tokenAmount);
+    emit TokenPurchase(msg.sender, _beneficiary, msg.value, tokenAmount);
 
 
     _updatePurchasingState(_beneficiary, tokenAmount);
@@ -201,7 +201,7 @@ contract Crowdsale {
    * @return Number of tokens that can be purchased with the specified _tokenAmount
    */
   function _getTokenAmount(uint256 _tokenAmount) internal view returns (uint256) {
-    return _tokenAmount.mul(rate);
+    return _tokenAmount.mul(price_per_token);
   }
 
   /**
@@ -218,6 +218,7 @@ contract TimedCrowdsale is Crowdsale {
 
   uint256 public openingTime;
   uint256 public closingTime;
+  uint256 public goal;
 
   /**
    * @dev Reverts if not in crowdsale time range. 
@@ -248,7 +249,7 @@ contract TimedCrowdsale is Crowdsale {
    * @return Whether crowdsale period has elapsed
    */
   function hasClosed() public view returns (bool) {
-    return now > closingTime;
+    return (now >= closingTime || ethRaised >= goal);
   }
   
   /**
@@ -445,17 +446,24 @@ contract CappedCrowdsale is Crowdsale {
    */
   function _preValidatePurchase(address _beneficiary, uint256 _tokenAmount) view internal {
     super._preValidatePurchase(_beneficiary, _tokenAmount);
-    require(ethRaised.add(_tokenAmount) <= cap);
+    require(ethRaised.add(_tokenAmount.mul(price_per_token)) <= cap);
   }
 
 }
 
 
 contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
-// 43200, 1, "0xca35b7d915458ef540ade6068dfe2f44e8fa733c", "1000", "0x35ef07393b57464e93deb59175ff72e6499450cf", "1000"
-  // function ERC721CrowdSale(uint256 _openingTime, uint256 _closingTime, uint256 _rate, uint256 _cap, MintableToken _token, uint256 _goal) public
-  function ERC721CrowdSale(uint256 _crowdsale_length_minutes, uint256 _rate, address _wallet, uint256 _cap, DetailedERC721 _token, uint256 _goal) public
-  Crowdsale(_rate, _wallet, _token)
+  uint public token_goal;
+
+  //first MVP from February// 43200, 1, "0x038343bfaf1f35b01d91513c8472764d55474045", "1000", "0x409F8C0Bb2C9C278a51E9f0E0f38AD32F663415e", "1000"
+  //updated version for LIVE MVP                                               180000000000000000
+  // 150, "180000000000000000", "0x769387d444ff8a4059983186deadcd1ab8e99390", "18000000000000000000", "0x584560d1676995db4728cc7b1773cb4903ffeae1", "18000000000000000000", 100
+  // 15, "180000000000000000", "0x769387d444ff8a4059983186deadcd1ab8e99390", "540000000000000000", "0x4e12e17f3b2ecec2e4ed4890383529b49c54c923", "540000000000000000", 3
+  // copy for safe keeping 43200, "180000000000000000", "0x038343bfaf1f35b01d91513c8472764d55474045", "612000000000000000000", "0x41acb3dca09f738224adec8089845ed43276c55d", "612000000000000000000", 3400
+    // function SampleCrowdsale(uint256 _openingTime, uint256 _closingTime, uint256 price_per_token, uint256 _cap, MintableToken _token, uint256 _goal) public
+
+  function ERC721CrowdSale(uint256 _crowdsale_length_minutes, uint256 _price_per_token, address _wallet, uint256 _cap, DetailedERC721 _token, uint256 _goal, uint256 _token_goal) public
+  Crowdsale(_price_per_token, _wallet, _token)
     CappedCrowdsale(_cap)
     // TimedCrowdsale(_openingTime, _closingTime)
     TimedCrowdsale(_crowdsale_length_minutes)
@@ -464,6 +472,7 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
     //As goal needs to be met for a successful crowdsale
     //the value needs to less or equal than a cap which is limit for accepted funds
     require(_goal <= _cap);
+    token_goal = _token_goal;
 
   }
     // function _updatePurchasingState(address _beneficiary, uint256 _tokenAmount) internal view returns(address, uint256){
