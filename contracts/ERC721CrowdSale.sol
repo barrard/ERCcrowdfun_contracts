@@ -454,6 +454,8 @@ contract CappedCrowdsale is Crowdsale {
 
 contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
   uint public token_goal;
+  string public name;
+  string public description;
 
   //first MVP from February// 43200, 1, "0x038343bfaf1f35b01d91513c8472764d55474045", "1000", "0x409F8C0Bb2C9C278a51E9f0E0f38AD32F663415e", "1000"
   //updated version for LIVE MVP                                               180000000000000000
@@ -462,7 +464,7 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
   // copy for safe keeping 43200, "180000000000000000", "0x038343bfaf1f35b01d91513c8472764d55474045", "612000000000000000000", "0x41acb3dca09f738224adec8089845ed43276c55d", "612000000000000000000", 3400
     // function SampleCrowdsale(uint256 _openingTime, uint256 _closingTime, uint256 price_per_token, uint256 _cap, MintableToken _token, uint256 _goal) public
 
-  function ERC721CrowdSale(uint256 _crowdsale_length_minutes, uint256 _price_per_token, address _wallet, uint256 _cap, DetailedERC721 _token, uint256 _goal, uint256 _token_goal) public
+  function ERC721CrowdSale(string _name, uint256 _crowdsale_length_minutes, uint256 _price_per_token, address _wallet, uint256 _cap, DetailedERC721 _token, uint256 _goal, uint256 _token_goal) public
   Crowdsale(_price_per_token, _wallet, _token)
     CappedCrowdsale(_cap)
     // TimedCrowdsale(_openingTime, _closingTime)
@@ -473,8 +475,16 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
     //the value needs to less or equal than a cap which is limit for accepted funds
     require(_goal <= _cap);
     token_goal = _token_goal;
+    name = _name;
 
   }
+
+    function set_crowdsale_name(string _new_name) onlyOwner{
+      name = _new_name;
+    }
+    function set_crowdsale_description(string _new_description) onlyOwner{
+      description = _new_description;
+    }
     // function _updatePurchasingState(address _beneficiary, uint256 _tokenAmount) internal view returns(address, uint256){
     //   if(_checkIfCrowdsaleGoalReached()){
     //     super._postValidatePurchase(ethRaised, goal);

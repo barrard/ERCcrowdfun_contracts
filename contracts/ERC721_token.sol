@@ -380,6 +380,8 @@ contract MintableNonFungibleToken is NonFungibleToken{
 
     
     struct CrowdSale{
+        string _name;
+        string _description;
         uint _cap;
         uint _token_goal;
         uint _goal;
@@ -415,8 +417,8 @@ contract MintableNonFungibleToken is NonFungibleToken{
     function get_tokens_for_property(address _property) public returns (uint[]){
         return property_to_tokens[_property];
     }
-                                    //10,     "1000000000000000",     "3000000000000000",  "3000000000000000",  3,    0
-    function spend_CS_Token(uint _time_limit, uint _price_per_token, uint _cap, uint _goal, uint _token_goal, uint _token_id) public {
+                                    //"great CS name", 10,     "1000000000000000",     "3000000000000000",  "3000000000000000",  3,    0
+    function spend_CS_Token(string _name, uint _time_limit, uint _price_per_token, uint _cap, uint _goal, uint _token_goal, uint _token_id) public {
 
         require(ownerOf(_token_id) == msg.sender);
         // require(this == get_where_tokens_belong(_token_id) ); 
@@ -426,14 +428,14 @@ contract MintableNonFungibleToken is NonFungibleToken{
         this.transferFrom(msg.sender, address(this), _token_id);
 
         spent_prop_tokens.push(_token_id);        //wallett, token_id, time_in_minutes, rate
-        address _new_crowdasle = make_new_property(_time_limit, _price_per_token, msg.sender, _cap, _goal, _token_goal, _token_id);
+        address _new_crowdasle = make_new_property(_name, _time_limit, _price_per_token, msg.sender, _cap, _goal, _token_goal, _token_id);
         emit Crowdsale_initiated(_new_crowdasle, msg.sender, _token_id);
     } 
     //43200, 1, "0xca35b7d915458ef540ade6068dfe2f44e8fa733c", "1000", "0x35ef07393b57464e93deb59175ff72e6499450cf", "1000"
     //time(min), rate, "wallet raising funds",              cap,       Token,                                        goal
     // function make_new_property(address _wallet) internal returns(uint _id, address _crowdsale, bool _visible, address _wallet_raising_funds){
-    function make_new_property(uint _time_limit, uint _price_per_token, address _wallet, uint _cap, uint _goal, uint _token_goal, uint _token_id) internal returns(address _crowdsale){
-      address _new_crowdsale = new ERC721CrowdSale(_time_limit, _price_per_token, _wallet, _cap, _token_address, _goal, _token_goal);
+    function make_new_property(string _name, uint _time_limit, uint _price_per_token, address _wallet, uint _cap, uint _goal, uint _token_goal, uint _token_id) internal returns(address _crowdsale){
+      address _new_crowdsale = new ERC721CrowdSale(_name, _time_limit, _price_per_token, _wallet, _cap, _token_address, _goal, _token_goal);
       CrowdSale storage _new_crowdsale_obj = addres_to_Property[_new_crowdsale];
       _new_crowdsale_obj._id = _crowdsale_counter;
       _new_crowdsale_obj._address = _new_crowdsale;
@@ -483,12 +485,12 @@ contract MintableNonFungibleToken is NonFungibleToken{
     }
 
     function _processPurchase(address _buyer) internal {
-        mint_prop_token(this, this);
-      _deliverTokens(_buyer);
+        mint_prop_token(this, this, _buyer);
     }
 
-    function _deliverTokens(address _buyer) internal {
-        uint _tokenID = this.get_one_OwnerToken_id(this);
+    function _deliverTokens(address _buyer, uint _id) internal {
+        // uint _tokenID = this.get_one_OwnerToken_id(this);
+        uint _tokenID = _id;
         this.transfer(_buyer, _tokenID);
         crowdsale_token_to_address[_tokenID] = _buyer;
     }
@@ -528,18 +530,22 @@ contract MintableNonFungibleToken is NonFungibleToken{
     
     function mint_token_lot(uint _amount, address _addr, address _metadata) public{
         for (uint x = 0 ; x < _amount ; x++){
-            mint(_addr, token_counter, _metadata);
+            mint(this, token_counter, _metadata);
             // token_to_address[token_counter] = _addr;
             property_to_tokens[_metadata].push(token_counter);
+            _deliverTokens(_addr, token_counter);
+
             token_counter++;
         }
         emit Seed_Tokes_Minted(_addr ,_metadata ,_amount);
     }    
-    function mint_prop_token(address _addr, address _metadata) internal{
+    function mint_prop_token(address _addr, address _metadata, address _buyer) internal{
         mint(_addr, token_counter, _metadata);
         // token_to_address[token_counter] = _addr;
         // property_to_tokens[_addr].push(token_counter);
         total_prop_tokens.push(prop_token_counter);
+        _deliverTokens(_buyer, token_counter);
+
         emit Prop_token_minted(prop_token_counter, _addr, _metadata, token_counter);
 
         prop_token_counter++;
