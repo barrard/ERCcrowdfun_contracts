@@ -31,7 +31,6 @@ contract Ownable {
 }
 
 contract ERC721 {
-    // Function
     function totalSupply() public view returns (uint256 _totalSupply);
     function balanceOf(address _owner) public view returns (uint256 _balance);
     function ownerOf(uint _tokenId) public view returns (address _owner);
@@ -502,6 +501,7 @@ contract CappedCrowdsale is Crowdsale {
 contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
   uint public token_goal;
   string public name;
+  // address public owner;
   // string public description;
 
   //first MVP from February// 43200, 1, "0x038343bfaf1f35b01d91513c8472764d55474045", "1000", "0x409F8C0Bb2C9C278a51E9f0E0f38AD32F663415e", "1000"
@@ -523,6 +523,7 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
     require(_goal <= _cap);
     token_goal = _token_goal;
     name = _name;
+    // owner = _wallet;
 
   }
   function _postValidatePurchase (address _beneficiary, uint _refund_amount)  internal {
@@ -573,6 +574,44 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
     // }
 
 }
+
+/**
+ * The CS_Creator contract creates a Crowdsale with the provided address as the mintable token
+ */
+contract CS_Creator is Ownable{
+  mapping(uint=>address) public id_to_address;
+  mapping(address=>address)crowdsale_to_owner;
+  ERC721CrowdSale _cs;
+  uint CS_counter=0;
+  function CS_Creator (address _token) {
+    // CS_Creator csc = CS_Creator(address(this));
+    // csc.transferOwnership(_token);
+  }
+  function create_crowdsale(string _name, uint256 _crowdsale_length_minutes, uint256 _price_per_token, address _wallet, uint256 _cap, DetailedERC721 _token, uint256 _goal, uint256 _token_goal) onlyOwner returns(address){
+      address _new_crowdsale = new ERC721CrowdSale(_name, _crowdsale_length_minutes, _price_per_token,  _wallet,  _cap,  _token,  _goal,  _token_goal);
+      id_to_address[CS_counter] = _new_crowdsale;
+      crowdsale_to_owner[_new_crowdsale] = _wallet;
+      CS_counter++;
+      // transfer_CS_ownership(address(_new_crowdsale), _wallet);
+      return _new_crowdsale;
+  }
+
+  function request_ownership(address _crowdsale) public returns(bool){
+    require(msg.sender == crowdsale_to_owner[_crowdsale]);
+    _cs = ERC721CrowdSale(_crowdsale);
+    _cs.transferOwnership(msg.sender);
+  }
+
+  // function transfer_CS_ownership (address _new_crowdsale, address _wallet)  internal {
+  //    _cs = ERC721CrowdSale(_new_crowdsale);
+  //   _cs.transferOwnership(_wallet);
+
+    
+  // }
+  
+
+}
+
 
 library SafeMath {
 

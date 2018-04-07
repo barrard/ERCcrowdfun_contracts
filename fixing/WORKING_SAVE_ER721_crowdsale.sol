@@ -430,7 +430,7 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
     require(isFinalized);
     require(!goalReached());
 
-    // vault.refund(msg.sender);
+    vault.refund(msg.sender);
   }
 
   /**
@@ -440,23 +440,6 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
   function goalReached() public view returns (bool) {
     return ethRaised >= goal;
   }
-
-
-  function _postValidatePurchase (address _beneficiary, uint _refund_amount)  internal {
-
-    if (_refund_amount > 0){
-      vault._return_extra_wei(_beneficiary, _refund_amount);
-
-    }
-     // msg.value -= _refund_amount;
-
-      // was_refunded = true;
-    // }else{
-    //   was_refunded = false;
-    // }
-    
-  }
-  
 
 
   /**
@@ -542,10 +525,25 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
     name = _name;
 
   }
+  function _postValidatePurchase (address _beneficiary, uint _refund_amount)  internal {
 
-    function set_crowdsale_name(string _new_name) onlyOwner{
-      name = _new_name;
+    if (_refund_amount > 0){
+      vault._return_extra_wei(_beneficiary, _refund_amount);
+
     }
+     // msg.value -= _refund_amount;
+
+      // was_refunded = true;
+    // }else{
+    //   was_refunded = false;
+    // }
+    
+  }
+  
+
+    // function set_crowdsale_name(string _new_name) onlyOwner{
+    //   name = _new_name;
+    // }
     // function set_crowdsale_description(string _new_description) onlyOwner{
     //   description = _new_description;
     // }
@@ -564,15 +562,15 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
       return token.get_one_OwnerToken_id(this);      
     }
     
-    function End_crowd_sale () public onlyOwner returns(bool res) {
-      if(ethRaised == goal) {
-          closingTime = block.timestamp;
-        return true;
-      }else{
-        return false;
+    // function End_crowd_sale () public onlyOwner returns(bool res) {
+    //   if(ethRaised == goal) {
+    //       closingTime = block.timestamp;
+    //     return true;
+    //   }else{
+    //     return false;
 
-      }
-    }
+    //   }
+    // }
 
 }
 
