@@ -47,8 +47,6 @@ contract ERC721 {
     // Events
     event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);
     event Approval(address indexed _owner, address indexed _approved, uint256 _tokenId);
-    event Return_extra_wei(address investor, uint returned_wei_value);
-
 }
 
 /**
@@ -82,13 +80,6 @@ contract Crowdsale {
 
   // Amount of eth raised
   uint256 public ethRaised;
-
-  //refund any left over eth after calulating tokens * per_token 
-  // uint public refund_amount=0;
-
-  //did the last purchase require a refund of extra wei sent? default false
-  bool public was_refunded=false;
-
 
   /**
    * Event for token purchase logging
@@ -132,10 +123,7 @@ contract Crowdsale {
     // require(msg.value == 1 ether /10);
     uint256 weiAmount = msg.value;
     uint256 tokenAmount = weiAmount / price_per_token;
-    uint refund_amount = weiAmount.sub(tokenAmount.mul(price_per_token));
-
     _preValidatePurchase(_beneficiary, tokenAmount);
-
 
     // calculate token amount to be created
     // uint256 tokens = _getTokenAmount(tokenAmount);
@@ -150,9 +138,7 @@ contract Crowdsale {
     _updatePurchasingState(_beneficiary, tokenAmount);
 
     _forwardFunds();
-    _postValidatePurchase(_beneficiary, refund_amount);
-    // _check_for_extra(_beneficiary, refund_amount);
-
+    _postValidatePurchase(_beneficiary, tokenAmount);
   }
 
   // -----------------------------------------
@@ -169,22 +155,13 @@ contract Crowdsale {
     require(_tokenAmount != 0);
   }
 
-  function _check_for_extra (address _beneficiary, uint _refund_amount)  internal {
-    was_refunded = false;
-
-    // if (_refund_amount > 0){
-     // msg.value -= _refund_amount;
-    // return true;
-    // }else{
-      // return false;
-    // }
-    
-  }
-  
-
-
-  function _postValidatePurchase(address _beneficiary, uint256 _refund_amount) internal {
-    // return (_beneficiary, _refund_amount);
+  /**
+   * @dev Validation of an executed purchase. Observe state and use revert statements to undo rollback when valid conditions are not met.
+   * @param _beneficiary Address performing the token purchase
+   * @param _tokenAmount Value in eth involved in the purchase
+   */
+  function _postValidatePurchase(address _beneficiary, uint256 _tokenAmount) internal pure returns(address, uint256){
+    return (_beneficiary, _tokenAmount);
   }
 
   /**
@@ -258,13 +235,10 @@ contract TimedCrowdsale is Crowdsale {
 //  @param _openingTime Crowdsale opening time
 //  @param _closingTime Crowdsale closing time
   // function TimedCrowdsale(uint256 _openingTime, uint256 _closingTime) public {
-  function TimedCrowdsale(uint _crowdsale_length_minutes, uint _goal) public {
+  function TimedCrowdsale(uint _crowdsale_length_minutes) public {
     // require(_openingTime >= block.timestamp);
     // require(_closingTime >= _openingTime);
     require(_crowdsale_length_minutes > 0);
-
-    goal = _goal;
-
 
     openingTime = block.timestamp;
     closingTime = block.timestamp + (_crowdsale_length_minutes * 1 minutes);
@@ -283,7 +257,7 @@ contract TimedCrowdsale is Crowdsale {
   function hasClosed2() public view returns (bool) {
     return (block.timestamp >= closingTime);
   }
-  function get_now() public returns (uint){
+  function get_block.timestamp() public returns (uint){
     return block.timestamp;
   }
   
@@ -296,12 +270,12 @@ contract TimedCrowdsale is Crowdsale {
     super._preValidatePurchase(_beneficiary, _tokenAmount);
   }
 
-  // function _postValidatePurchase(uint _goal, uint _raised) internal {
-  //   if(_goal == _raised) closingTime = block.timestamp;
-  //   // super._postValidatePurchase();
+  function _postValidatePurchase(uint _goal, uint _raised) internal {
+    if(_goal == _raised) closingTime = block.timestamp;
+    // super._postValidatePurchase();
 
 
-  // }
+  }
 
 }
 
@@ -349,7 +323,6 @@ contract RefundVault is Ownable {
   event Closed();
   event RefundsEnabled();
   event Refunded(address indexed beneficiary, uint256 tokenAmount);
-  event Return_extra_wei(address investor, uint returned_wei_value, uint depositedValue);
 
   /**
    * @param _wallet Vault address
@@ -391,16 +364,6 @@ contract RefundVault is Ownable {
     investor.transfer(depositedValue);
     emit Refunded(investor, depositedValue);
   }
-
-  function _return_extra_wei(address investor, uint returned_value) public onlyOwner {
-    uint256 depositedValue = deposited[investor];
-    uint new_depositedValue = depositedValue.sub(returned_value);
-    deposited[investor] = new_depositedValue;
-    investor.transfer(returned_value);
-    emit Return_extra_wei(investor, returned_value, new_depositedValue);
-
-
-  }
 }
 
 
@@ -430,7 +393,7 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
     require(isFinalized);
     require(!goalReached());
 
-    // vault.refund(msg.sender);
+    vault.refund(msg.sender);
   }
 
   /**
@@ -440,24 +403,6 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
   function goalReached() public view returns (bool) {
     return ethRaised >= goal;
   }
-
-
-  function _postValidatePurchase (address _beneficiary, uint _refund_amount)  internal {
-
-    if (_refund_amount > 0){
-      vault._return_extra_wei(_beneficiary, _refund_amount);
-
-    }
-     // msg.value -= _refund_amount;
-
-      // was_refunded = true;
-    // }else{
-    //   was_refunded = false;
-    // }
-    
-  }
-  
-
 
   /**
    * @dev vault finalization task, called when owner calls finalize()
@@ -519,7 +464,7 @@ contract CappedCrowdsale is Crowdsale {
 contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
   uint public token_goal;
   string public name;
-  // string public description;
+  string public description;
 
   //first MVP from February// 43200, 1, "0x038343bfaf1f35b01d91513c8472764d55474045", "1000", "0x409F8C0Bb2C9C278a51E9f0E0f38AD32F663415e", "1000"
   //updated version for LIVE MVP                                               180000000000000000
@@ -532,7 +477,7 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
   Crowdsale(_price_per_token, _wallet, _token)
     CappedCrowdsale(_cap)
     // TimedCrowdsale(_openingTime, _closingTime)
-    TimedCrowdsale(_crowdsale_length_minutes, _goal)
+    TimedCrowdsale(_crowdsale_length_minutes)
     RefundableCrowdsale(_goal)
   {
     //As goal needs to be met for a successful crowdsale
@@ -546,9 +491,9 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
     function set_crowdsale_name(string _new_name) onlyOwner{
       name = _new_name;
     }
-    // function set_crowdsale_description(string _new_description) onlyOwner{
-    //   description = _new_description;
-    // }
+    function set_crowdsale_description(string _new_description) onlyOwner{
+      description = _new_description;
+    }
     // function _updatePurchasingState(address _beneficiary, uint256 _tokenAmount) internal view returns(address, uint256){
     //   if(_checkIfCrowdsaleGoalReached()){
     //     super._postValidatePurchase(ethRaised, goal);

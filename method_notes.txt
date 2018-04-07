@@ -1,0 +1,161 @@
+token (fallback)
+add_photo_to_photo_array
+
+string _url, address _addr
+approve
+
+address _to, uint256 _tokenId
+buyToken
+
+address _buyer
+mint_token_lot
+
+uint256 _amount, address _addr, address _metadata
+request_finalization
+
+address _addr
+set_symbol
+
+string _symbol
+spend_CS_Token
+
+"great CS name", 10,     "1000000000000000",     "3000000000000000",  "3000000000000000",  3,    0
+transfer
+
+address _to, uint256 _tokenId
+transferFrom
+
+address _from, address _to, uint256 _tokenId
+transferOwnership
+
+address newOwner
+_crowdsale_counter
+balanceOf
+
+address _owner
+CrowdSales
+
+0
+0: string: _name great CS name
+1: uint256: _cap 3000000000000000
+2: uint256: _token_goal 3
+3: uint256: _goal 3000000000000000
+4: uint256: _price_per_token 1000000000000000
+5: uint256: _time_limit 10
+6: uint256: _id 0
+7: address: _address 0x5365c8684c55c6b019d61ea42bb9b36faf353865
+8: bool: _visible true
+9: address: _wallet_raising_funds 0x038343bfaf1f35b01d91513c8472764d55474045
+10: uint256: _token_id 0
+get_crowdsale_count
+get_my_tokens
+get_one_OwnerToken_id
+
+address _owner
+get_property_by_id
+
+uint256 id
+get_property_id_by_address
+
+address _addr
+get_spent_prop_tokens
+get_tokens_for_property
+
+address _property
+get_total_prop_tokens
+get_wei_balance
+getApproved
+
+uint256 _tokenId
+getOwnerTokens
+
+address _owner
+implementsERC721
+name
+owner
+ownerOf
+
+uint256 _tokenId
+prop_token_counter
+spent_prop_tokens
+
+uint256 
+symbol
+token_counter
+tokenMetadata
+
+uint256 _tokenId
+tokenOfOwnerByIndex
+
+address _owner, uint256 _index
+total_prop_tokens
+
+uint256 
+totalSupply
+
+
+
+crowdsale
+
+(fallback)
+add_photo_to_photo_array
+
+string _photo
+buyTokens
+
+address _beneficiary
+claimRefund
+End_crowd_sale
+finalize
+transferOwnership
+
+address newOwner
+cap
+capReached
+closingTime
+ethRaised
+get_one_OwnerToken_id
+get_photo_from_photos_array
+
+uint256 _photo_index
+get_photos_array_length
+goal
+goalReached
+hasClosed
+isFinalized
+name
+openingTime
+owner
+price_per_token
+token
+token_goal
+vault
+0: address: 0x897003ed65c9f9ba2365438184f89d8b4dc0736d
+wallet
+0: address: 0x038343bfaf1f35b01d91513c8472764d55474045
+
+
+
+
+
+
+
+
+
+
+
+refund vault
+
+close
+enableRefunds
+deposit address investor
+refund address investor
+transferOwnership
+
+address newOwner
+deposited
+
+address 
+owner
+state
+wallet

@@ -367,21 +367,19 @@ contract MintableNonFungibleToken is NonFungibleToken{
     uint public prop_token_counter = 0;
     uint[] public total_prop_tokens;
     uint[] public spent_prop_tokens;
-
+    string public name;
+    function MintableNonFungibleToken(string _name){
+        name=_name;
+    }
     uint public _crowdsale_counter = 0;
     CrowdSale[] public CrowdSales;
     
     mapping(address => uint[]) property_to_tokens;
-    // mapping(uint => address) token_to_address;
-    mapping(address=>CrowdSale) public addres_to_Property;
-    mapping(address=>uint)owner_to_crowdsale_to_token;
-    mapping(uint=>address)crowdsale_token_to_address;
-    // mapping(uint=>address)prop_tokens_crowdsale;
-
+    mapping(address=>CrowdSale) addres_to_Property;
+    // mapping(address=>string)address_to_username;
     
     struct CrowdSale{
         string _name;
-        string _description;
         uint _cap;
         uint _token_goal;
         uint _goal;
@@ -397,27 +395,30 @@ contract MintableNonFungibleToken is NonFungibleToken{
         }
 
 
-    event Seed_Tokes_Minted(address _to, address _metadata ,uint256 _tokenId);
+    event Seed_Tokes_Minted(address _metadata ,uint256 _amount);
     event Crowdsale_initiated(address crowdsale, address indexed _from, uint256 indexed _tokenId);
     event Prop_token_minted(uint prop_token_counter, address  _buyer, address  _from, uint _token_id);
-    // event CrowdsaleToken_Purchased(address indexed purchaser);
 
     modifier onlyNonexistentToken(uint _tokenId) {
         require(tokenIdToOwner[_tokenId] == address(0));
         _;
     }
 
-    function get_total_prop_tokens() public returns (uint){
+    function get_total_prop_tokens() public view returns (uint){
         return total_prop_tokens.length;
     }
-    function get_spent_prop_tokens() public returns (uint){
+    function get_spent_prop_tokens() public view returns (uint){
         return spent_prop_tokens.length;
     }
 
-    function get_tokens_for_property(address _property) public returns (uint[]){
+    function get_tokens_for_property(address _property) public view returns (uint[]){
         return property_to_tokens[_property];
-    }
-                                    //"great CS name", 10,     "1000000000000000",     "3000000000000000",  "3000000000000000",  3,    0
+    }//      (string _name, uint256 _crowdsale_length_minutes, uint256 _price_per_token, address _wallet, uint256 _cap, DetailedERC721 _token, uint256 _goal, uint256 _token_goal) public
+
+//"name",15, "180000000000000000", "0xca35b7d915458ef540ade6068dfe2f44e8fa733c", "540000000000000000", "0x4e12e17f3b2ecec2e4ed4890383529b49c54c923", "540000000000000000", 3
+//"name",15, "1000000000000000000", "0xca35b7d915458ef540ade6068dfe2f44e8fa733c","3000000000000000000", "0x4e12e17f3b2ecec2e4ed4890383529b49c54c923", "3000000000000000000", 3
+ //"great CS name", 10,     "1000000000000000",     "3000000000000000",  "3000000000000000",  3,    0
+ // "great CS name", 10,     "1000000000000000000",     "3000000000000000000",  "3000000000000000000",  3,    0
     function spend_CS_Token(string _name, uint _time_limit, uint _price_per_token, uint _cap, uint _goal, uint _token_goal, uint _token_id) public {
 
         require(ownerOf(_token_id) == msg.sender);
@@ -437,6 +438,7 @@ contract MintableNonFungibleToken is NonFungibleToken{
     function make_new_property(string _name, uint _time_limit, uint _price_per_token, address _wallet, uint _cap, uint _goal, uint _token_goal, uint _token_id) internal returns(address _crowdsale){
       address _new_crowdsale = new ERC721CrowdSale(_name, _time_limit, _price_per_token, _wallet, _cap, _token_address, _goal, _token_goal);
       CrowdSale storage _new_crowdsale_obj = addres_to_Property[_new_crowdsale];
+      _new_crowdsale_obj._name = _name;
       _new_crowdsale_obj._id = _crowdsale_counter;
       _new_crowdsale_obj._address = _new_crowdsale;
       _new_crowdsale_obj._visible = true;
@@ -449,7 +451,6 @@ contract MintableNonFungibleToken is NonFungibleToken{
       _new_crowdsale_obj._wallet_raising_funds = _wallet;
       CrowdSales.push(_new_crowdsale_obj);
       _crowdsale_counter++;
-      // return (_new_crowdsale_obj._id, _new_crowdsale_obj._address, _new_crowdsale_obj._visible, _new_crowdsale_obj._wallet_raising_funds);
       return (_new_crowdsale);
 
     }
@@ -461,23 +462,13 @@ contract MintableNonFungibleToken is NonFungibleToken{
 
     function buyToken(address _buyer) public payable {
       require(msg.value == 1 ether);
-      // uint256 weiAmount = msg.value;
-      // uint256 tokenAmount = weiAmount / (1 ether / 10);
+
       _preValidatePurchase(_buyer);
 
-      // calculate token amount to be created
-      // uint256 tokens = _getTokenAmount(tokenAmount);
 
-      // update state
-      // ethRaised = ethRaised.add(tokenAmount/10);
 
       _processPurchase(_buyer);
 
-
-    //   _updatePurchasingState(_buyer, tokenAmount);
-
-      // _forwardFunds();
-      // _postValidatePurchase(_buyer, tokenAmount);
     }
 
     function _preValidatePurchase(address _buyer) pure internal{
@@ -492,7 +483,6 @@ contract MintableNonFungibleToken is NonFungibleToken{
         // uint _tokenID = this.get_one_OwnerToken_id(this);
         uint _tokenID = _id;
         this.transfer(_buyer, _tokenID);
-        crowdsale_token_to_address[_tokenID] = _buyer;
     }
 
     function _forwardFunds() internal {
@@ -502,16 +492,33 @@ contract MintableNonFungibleToken is NonFungibleToken{
     function get_crowdsale_count() public view returns(uint){
         return _crowdsale_counter;
     }
+    
+    function get_property_id_by_address(address _addr) public view returns (uint){
+        CrowdSale memory  crowdsale = (addres_to_Property[_addr]);
+        return crowdsale._id;
 
-    function get_property_by_id(uint id) public view returns(uint _id, address _crowdsale, bool _visible, address _wallet_raising_funds){
-        CrowdSale memory _crowdsale_obj = CrowdSales[id];
-        return (_crowdsale_obj._id, _crowdsale_obj._address, _crowdsale_obj._visible, _crowdsale_obj._wallet_raising_funds);
+    }
+
+
+    function get_property_by_id(uint id) public view returns(      string _name,
+                                                                  uint _cap,
+                                                                  uint _token_goal,
+                                                                  uint _goal,
+                                                                  uint _price_per_token,
+                                                                  uint _time_limit,
+                                                                  uint _id,
+                                                                  address _address,
+                                                                  bool _visible,
+                                                                  address _wallet_raising_funds,
+                                                                  uint _token_id
+      ){
+        CrowdSale memory _cs = CrowdSales[id];
+        return (_cs._name, _cs._cap, _cs._token_goal, _cs._goal,
+                         _cs._price_per_token, _cs._time_limit, _cs._id, _cs._address,
+                          _cs._visible, _cs._wallet_raising_funds, _cs._token_id);
     }
     
-    // function get_where_tokens_belong(uint _tokenID) public view returns(address){
-    //     return token_to_address[_tokenID];
-        
-    // }
+
     function get_wei_balance() public view returns(uint){
         return address(this).balance;
     }
@@ -527,38 +534,60 @@ contract MintableNonFungibleToken is NonFungibleToken{
         numTokensTotal = numTokensTotal.add(1);
         // emit Mint(_owner, _tokenId);
     }
+
+      modifier onlySame(address _addr1, address _addr2) {
+        require(_addr1 == _addr2);
+        _;
+      }
+
     
-    function mint_token_lot(uint _amount, address _addr, address _metadata) public{
+    function mint_token_lot(uint _amount, address _metadata) public
+    // onlySame(_addr, _metadata)
+    {
+
+        // require(_addr == _metadata);
+        
+        CrowdSale storage  crowdsale= (addres_to_Property[_metadata]);
+        address addr = crowdsale._wallet_raising_funds;
+        require(addr == msg.sender);
         for (uint x = 0 ; x < _amount ; x++){
             mint(this, token_counter, _metadata);
-            // token_to_address[token_counter] = _addr;
             property_to_tokens[_metadata].push(token_counter);
-            _deliverTokens(_addr, token_counter);
+            _deliverTokens(_metadata, token_counter);
 
             token_counter++;
         }
-        emit Seed_Tokes_Minted(_addr ,_metadata ,_amount);
+        emit Seed_Tokes_Minted(_metadata ,_amount);
     }    
     function mint_prop_token(address _addr, address _metadata, address _buyer) internal{
         mint(_addr, token_counter, _metadata);
-        // token_to_address[token_counter] = _addr;
-        // property_to_tokens[_addr].push(token_counter);
         total_prop_tokens.push(prop_token_counter);
         _deliverTokens(_buyer, token_counter);
-
         emit Prop_token_minted(prop_token_counter, _addr, _metadata, token_counter);
-
         prop_token_counter++;
         token_counter++;
-
     }
-
+    
+    // function get_username(address _addr) public view returns(string){
+    //     return address_to_username[_addr];
+    // }
+    
+    // function set_username(string _name) public {
+    //      address_to_username[msg.sender]  = _name;
+    // }
+    
     function request_finalization(address _addr) public{
-        CrowdSale memory  crowdsale= (addres_to_Property[_addr]);
+        CrowdSale storage  crowdsale= (addres_to_Property[_addr]);
         address addr = crowdsale._wallet_raising_funds;
         require(addr == msg.sender);
         ERC721CrowdSale erc721crowdsale = ERC721CrowdSale(_addr);
         erc721crowdsale.finalize();
-
     }
+    // function add_photo_to_photo_array( string _url, address _addr) public{
+    //     CrowdSale storage  crowdsale= (addres_to_Property[_addr]);
+    //     address addr = crowdsale._wallet_raising_funds;
+    //     require(addr == msg.sender);
+    //     ERC721CrowdSale erc721crowdsale = ERC721CrowdSale(_addr);
+    //     erc721crowdsale.add_photo_to_photo_array(_url);
+    // }
 }
