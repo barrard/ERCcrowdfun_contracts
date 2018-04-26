@@ -394,7 +394,7 @@ contract MintableNonFungibleToken is NonFungibleToken{
     string public name;
     function MintableNonFungibleToken(){
         name= "HArd coded name";
-        _cs_creator = CS_Creator(Crowdsale_creator_address);
+        // _cs_creator = CS_Creator(Crowdsale_creator_address);
     }
     uint public _crowdsale_counter = 0;
     CrowdSale[] public CrowdSales;
@@ -461,15 +461,14 @@ contract MintableNonFungibleToken is NonFungibleToken{
     function spend_CS_Token(string _name, uint _time_limit, uint _price_per_token, uint _cap, uint _goal, uint _token_goal, uint _token_id) public {
 
         require(ownerOf(_token_id) == msg.sender);
-        // require(this == get_where_tokens_belong(_token_id) ); 
 
         require (tokenIdToMetadata[_token_id] == address(this));
         approve(address(this), _token_id);
         this.transferFrom(msg.sender, address(this), _token_id);
 
         spent_CS_tokens.push(_token_id);        //wallett, token_id, time_in_minutes, rate
-        address _new_crowdasle = make_new_crowdsale(_name, _time_limit, _price_per_token, msg.sender, _cap, _goal, _token_goal, _token_id);
-        emit Crowdsale_initiated(_new_crowdasle, msg.sender, _token_id);
+        address _new_crowdsale = make_new_crowdsale(_name, _time_limit, _price_per_token, msg.sender, _cap, _goal, _token_goal, _token_id);
+        emit Crowdsale_initiated(_new_crowdsale, msg.sender, _token_id);
     } 
     //43200, 1, "0xca35b7d915458ef540ade6068dfe2f44e8fa733c", "1000", "0x35ef07393b57464e93deb59175ff72e6499450cf", "1000"
     //time(min), rate, "wallet raising funds",              cap,       Token,                                        goal
@@ -602,7 +601,7 @@ contract MintableNonFungibleToken is NonFungibleToken{
         mint(_addr, token_counter, _metadata);
         total_CS_tokens.push(CS_token_counter);
         _deliverTokens(_buyer, token_counter);
-        emit CS_token_minted(CS_token_counter, _addr, _metadata, token_counter);
+        emit CS_token_minted(CS_token_counter, _buyer, _metadata, token_counter);
         CS_token_counter++;
         token_counter++;
     }
@@ -615,6 +614,7 @@ contract MintableNonFungibleToken is NonFungibleToken{
     //      address_to_username[msg.sender]  = _name;
     // }
     
+    //TODO Remove this
     function request_finalization(address _addr) public{
         CrowdSale storage  crowdsale= (addres_to_Crowdsale[_addr]);
         address addr = crowdsale._wallet_raising_funds;

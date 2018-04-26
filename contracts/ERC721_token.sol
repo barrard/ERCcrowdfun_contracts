@@ -1,85 +1,7 @@
 
 pragma solidity ^0.4.18;
 import "./ERC721CrowdSale.sol";
-// contract Ownable {
-//   address public owner;
-//   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-//   /**
-//   * @dev The Ownable constructor sets the original `owner` of the contract to the sender
-//   * account.
-//   */
-//   function Ownable() public {
-//     owner = msg.sender;
-//   }
 
-//   /**
-//   * @dev Throws if called by any account other than the owner.
-//   */
-//   modifier onlyOwner() {
-//     require(msg.sender == owner);
-//     _;
-//   }
-
-//   /**
-//   * @dev Allows the current owner to transfer control of the contract to a newOwner.
-//   * @param newOwner The address to transfer ownership to.
-//   */
-//   function transferOwnership(address newOwner) public onlyOwner {
-//     require(newOwner != address(0));
-//     OwnershipTransferred(owner, newOwner);
-//     owner = newOwner;
-//   }
-
-// }
-
-/**
- * Interface for required functionality in the ERC721 standard
- * for non-fungible tokens.
- *
- * Author: Nadav Hollander (nadav at dharma.io)
- */
-// contract ERC721 {
-//     // Function
-//     function totalSupply() public view returns (uint256 _totalSupply);
-//     function balanceOf(address _owner) public view returns (uint256 _balance);
-//     function ownerOf(uint _tokenId) public view returns (address _owner);
-//     function approve(address _to, uint _tokenId) public;
-//     function getApproved(uint _tokenId) public view returns (address _approved);
-//     function transferFrom(address _from, address _to, uint _tokenId) public;
-//     function transfer(address _to, uint _tokenId) public;
-//     function implementsERC721() public view returns (bool _implementsERC721);
-
-//     // Events
-//     event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);
-//     event Approval(address indexed _owner, address indexed _approved, uint256 _tokenId);
-// }
-
-/**
- * Interface for optional functionality in the ERC721 standard
- * for non-fungible tokens.
- *
- * Author: Nadav Hollander (nadav at dharma.io)
- */
-// contract DetailedERC721 is ERC721 {
-//     function name() public view returns (string _name);
-//     function symbol() public view returns (string _symbol);
-//     function tokenMetadata(uint _tokenId) public view returns (string _infoUrl);
-//     function tokenOfOwnerByIndex(address _owner, uint _index) public view returns (uint _tokenId);
-// }
-
-
-/**
- * @title NonFungibleToken
- *
- * Generic implementation for both required and optional functionality in
- * the ERC721 standard for non-fungible tokens.
- *
- * Heavily inspired by Decentraland's generic implementation:
- * https://github.com/decentraland/land/blob/master/contracts/BasicNFT.sol
- *
- * Standard Author: dete
- * Implementation Author: Nadav Hollander <nadav at dharma.io>
- */
 contract NonFungibleToken is DetailedERC721, Ownable{
     string public name;
     string public symbol;
@@ -500,22 +422,33 @@ contract MintableNonFungibleToken is NonFungibleToken{
     }
 
 
-    function get_property_by_id(uint id) public view returns(      string _name,
-                                                                  uint _cap,
-                                                                  uint _token_goal,
-                                                                  uint _goal,
-                                                                  uint _price_per_token,
-                                                                  uint _time_limit,
-                                                                  uint _id,
-                                                                  address _address,
-                                                                  bool _visible,
-                                                                  address _wallet_raising_funds,
-                                                                  uint _token_id
+    function get_property_by_id(uint id) public view 
+    returns(      
+        string _name,
+        uint _cap,
+        uint _token_goal,
+        uint _goal,
+        uint _price_per_token,
+        uint _time_limit,
+        uint _id,
+        address _address,
+        bool _visible,
+        address _wallet_raising_funds,
+        uint _token_id,
       ){
         CrowdSale memory _cs = CrowdSales[id];
-        return (_cs._name, _cs._cap, _cs._token_goal, _cs._goal,
-                         _cs._price_per_token, _cs._time_limit, _cs._id, _cs._address,
-                          _cs._visible, _cs._wallet_raising_funds, _cs._token_id);
+        return (
+            _cs._name, 
+            _cs._cap, 
+            _cs._token_goal, 
+            _cs._goal,
+            _cs._price_per_token, 
+            _cs._time_limit, 
+            _cs._id, 
+            _cs._address,
+            _cs._visible, 
+            _cs._wallet_raising_funds, 
+            _cs._token_id);
     }
     
 
@@ -583,11 +516,5 @@ contract MintableNonFungibleToken is NonFungibleToken{
         ERC721CrowdSale erc721crowdsale = ERC721CrowdSale(_addr);
         erc721crowdsale.finalize();
     }
-    // function add_photo_to_photo_array( string _url, address _addr) public{
-    //     CrowdSale storage  crowdsale= (addres_to_Property[_addr]);
-    //     address addr = crowdsale._wallet_raising_funds;
-    //     require(addr == msg.sender);
-    //     ERC721CrowdSale erc721crowdsale = ERC721CrowdSale(_addr);
-    //     erc721crowdsale.add_photo_to_photo_array(_url);
-    // }
+
 }

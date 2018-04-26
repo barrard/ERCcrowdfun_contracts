@@ -531,46 +531,12 @@ contract ERC721CrowdSale is CappedCrowdsale, RefundableCrowdsale {
       vault._return_extra_wei(_beneficiary, _refund_amount);
 
     }
-     // msg.value -= _refund_amount;
-
-      // was_refunded = true;
-    // }else{
-    //   was_refunded = false;
-    // }
     
   }
-  
 
-    // function set_crowdsale_name(string _new_name) onlyOwner{
-    //   name = _new_name;
-    // }
-    // function set_crowdsale_description(string _new_description) onlyOwner{
-    //   description = _new_description;
-    // }
-    // function _updatePurchasingState(address _beneficiary, uint256 _tokenAmount) internal view returns(address, uint256){
-    //   if(_checkIfCrowdsaleGoalReached()){
-    //     super._postValidatePurchase(ethRaised, goal);
-    //   }
-    //   return (_beneficiary, _tokenAmount);
-    // }
-
-    // function _checkIfCrowdsaleGoalReached () public returns(bool res) {
-    //   if(ethRaised == goal) return true;
-    //   return false;
-    // }
     function get_one_OwnerToken_id () public view returns(uint _tokenID) {
       return token.get_one_OwnerToken_id(this);      
     }
-    
-    // function End_crowd_sale () public onlyOwner returns(bool res) {
-    //   if(ethRaised == goal) {
-    //       closingTime = block.timestamp;
-    //     return true;
-    //   }else{
-    //     return false;
-
-    //   }
-    // }
 
 }
 
